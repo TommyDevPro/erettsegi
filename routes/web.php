@@ -13,4 +13,4 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', [ApiController::class, 'MainLogic']);
+Route::get('/', [ApiController::class, 'index']);
