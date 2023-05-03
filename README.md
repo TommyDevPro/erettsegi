@@ -12,7 +12,7 @@
 
 #
 
-### ApiContoller.php ez tartalmazza a következőket:
+### App\Http\Controllers\ApiController ez tartalmazza a következőket:
 
 #### Validációt
 
