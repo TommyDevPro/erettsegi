@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class ApiController extends Controller
 {
@@ -20,14 +21,14 @@ class ApiController extends Controller
                 'eredmeny' => '22%',
             ],
             [
-                'nev' => 'történelem',
-                'tipus' => 'közép',
-                'eredmeny' => '80%',
-            ],
-            [
                 'nev' => 'matematika',
-                'tipus' => 'emelt',  'eredmeny' => '54%',
-            ],            [
+                'tipus' => 'emelt',
+                'eredmeny' => '54%',
+            ],        [
+                'nev' => 'történelem',
+                'tipus' => 'emelt',
+                'eredmeny' => '54%',
+            ],        [
                 'nev' => 'angol nyelv',
                 'tipus' => 'közép',
                 'eredmeny' => '44%',
@@ -65,9 +66,13 @@ class ApiController extends Controller
                 "valasztott-szak.egyetem"    => "required|string|min:2",
                 "valasztott-szak.kar"    => "required|string|min:2",
                 "valasztott-szak.szak"    => "required|string|min:4",
-                //erettsegi-eredmenyek
-                "erettsegi-eredmenyek"    => "required|array|min:5",
-                "erettsegi-eredmenyek.*"    => "required|array|min:3",
+                "erettsegi-eredmenyek"    =>       function ($attribute, $value, $fail) {
+                    $failed = false;
+                    $intersect = (array_intersect(['magyar nyelv és irodalom', 'történelem', 'matematika'], data_get($this->exampleData, "erettsegi-eredmenyek.*.nev")));
+                    if ($intersect !== ['magyar nyelv és irodalom', 'történelem', 'matematika']) {
+                        $fail('Értékelni nem lehet  mert nincsenek megadva a kötelező érettségi tantárgyak : ' . data_get(array_diff(['magyar nyelv és irodalom', 'történelem', 'matematika'], $intersect), "*")[0]);
+                    }
+                },
                 "erettsegi-eredmenyek.*.nev"    => "required|string|min:5",
                 "erettsegi-eredmenyek.*.tipus"    => "required|string|min:5|in:emelt,közép",
                 "erettsegi-eredmenyek.*.eredmeny"    => [
@@ -75,6 +80,9 @@ class ApiController extends Controller
                         $value = rtrim($value, '%');
                         if ($value <= 20) {
                             $fail('Értékelni nem lehet mert kevesebb mint 20 % az eredmenye az alábbi tantárgyból: ' .   data_get($this->exampleData, "erettsegi-eredmenyek." . explode(".", $attribute)[1] . ".nev"));
+                        }
+                        if ($value >= 100) {
+                            $fail('Értékelni nem lehet mert több mint 100 % az eredmenye az alábbi tantárgyból: ' .   data_get($this->exampleData, "erettsegi-eredmenyek." . explode(".", $attribute)[1] . ".nev"));
                         }
                     }
                 ],
@@ -107,10 +115,14 @@ class ApiController extends Controller
             );
         }
     }
+    private function ComputeLogic()
+    {
+    }
     public function MainLogic()
     {
         //Validáljuk a bemenetet
         $this->ValidateLogic();
         //Kiszámítjuk az eredményt, mert nem találtunk hibát előzőleg.
+        $this->ComputeLogic();
     }
 }
